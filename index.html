@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<style>
+	text {
+ font: 10px sans-serif;
+}
+</style>
+
+<body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+	<script>
+
+		var diameter = 700,
+		format = d3.format(",d"),
+		color = d3.scale.category20c();
+
+		var bubble = d3.layout.pack()
+		.sort(null)
+		.size([diameter, diameter])
+		.padding(1.5);
+
+		var svg = d3.select("body").append("svg")
+		.attr("width", diameter)
+		.attr("height", diameter)
+		.attr("class", "bubble");
+
+		d3.csv("https://data.cityofnewyork.us/resource/25th-nujf.csv?$limit=10000", function (error, root) {
+ 		if (error) throw error;
+
+	 		//Police Precinct
+			 var PPBrooklynList=[];
+			 var PPBronxList=[];
+			 var PPManhattanList=[];
+			 var PPQueensList=[]; 
+			 var PPStatenIslandList=[];
+ 
+			 //number of incidents in each borough
+			 var BrooklynCount=[];
+			 var BronxCount=[];
+			 var ManhattanCount=[];
+			 var QueensCount=[]; 
+			 var StatenIslandCount=[];
+			 
+			 //Borough of incident
+			 var BrooklynIncident=[]; 
+			 var BronxIncident=[]; 
+			 var ManhattanIncident=[]; 
+			 var QueensIncident=[]; 
+			 var StatenIslandIncident=[];
+			 
+			 var data=[]; //3D array of PPList, incidentCount, borough
+			 var dobj=[]; //array formated specifically for hierarchical processing
+
+			 root.forEach(function (d) {
+				 if (+d["RNK"] <= 10) {
+				 
+				 //only add name if it's not uniquely in the array
+				 if ((d["ETHCTY"]==="ASIAN AND PACIFIC ISLANDER") && (AsianNameList.indexOf(d["NM"]) ===-1)) {
+				 AsianNameList.push(d["NM"]);
+				 AsianNameCount.push(+d["CNT"]); //force the string into an integer
+				 AsianEthnicity.push(d["ETHCTY"]);
+				 }
+				 else if ((d["ETHCTY"]==="BLACK NON HISPANIC") && (BlackNameList.indexOf(d["NM"]) ===-1)) {
+				 BlackNameList.push(d["NM"]);
+				 BlackNameCount.push(+d["CNT"]); //force the string into an integer
+				 BlackEthnicity.push(d["ETHCTY"]);
+				 }
+				 else if ((d["ETHCTY"]==="HISPANIC") && (HispanicNameList.indexOf(d["NM"]) ===-1)) {
+				 HispanicNameList.push(d["NM"]);
+				 HispanicNameCount.push(+d["CNT"]); //force the string into an integer
+				 HispanicEthnicity.push(d["ETHCTY"]);
+				 }
+				 else if ((d["ETHCTY"]==="WHITE NON HISPANIC") && (WhiteNameList.indexOf(d["NM"]) ===-1)) {
+				 WhiteNameList.push(d["NM"]);
+				 WhiteNameCount.push(+d["CNT"]); //force the string into an integer
+				 WhiteEthnicity.push(d["ETHCTY"]);
+				 }
+				 }
+			});
+
+			data=[
+			 //test data is commented out:
+			 //["Tea","Coffee","Soda","Chips","Milk","Chocolate","Beer","Wine"],
+			 //[130,30,200,40,230,150,80,65]
+			 AsianNameList.concat(BlackNameList,WhiteNameList,HispanicNameList), 
+			 AsianNameCount.concat(BlackNameCount,WhiteNameCount,HispanicNameCount), 
+			 AsianEthnicity.concat(BlackEthnicity,WhiteEthnicity, HispanicEthnicity)
+			];
+
+			for (var di=0;di<data[0].length;di++) { 
+			   dobj.push({"key":di,"value":data[1][di]}); 
+			} 
+
+			display_pack({children: dobj});
+
+			function display_pack(root) {
+				 var node = svg.selectAll(".node")
+				 .data(bubble.nodes(root)
+				 .filter(function(d) { return !d.children; }))
+				 .enter().append("g")
+				 .attr("class", "node")
+				 .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+				 .style("fill", function(d) { 
+				 //color is based on ethnicity
+				 return color(data[2][d.key]); })
+				 .on("mouseover", function(d) {
+				 d3.select(this).style("fill", "gold"); 
+				 showToolTip(" "+data[0][d.key]+"<br> "+data[2][d.key]+"<br>count: "+data[1][d.key]+" ",d.x+d3.mouse(this)[0]+50,d.y+d3.mouse(this)[1],true);
+				 //console.log(d3.mouse(this));
+				 })
+				 //.on("mousemove", function(d,i) {
+				 //tooltipDivID.css({top:d.y+d3.mouse(this)[1],left:d.x+d3.mouse(this)[0]+50});
+				 //}) 
+				 .on("mouseout", function() {
+				 d3.select(this).style("fill", function(d) { return color(data[2][d.key]); });
+				 showToolTip(" ",0,0,false);
+			});
+
+
+
