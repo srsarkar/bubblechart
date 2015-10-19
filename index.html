@@ -26,8 +26,10 @@
 		.attr("height", diameter)
 		.attr("class", "bubble");
 
-		d3.csv("https://data.cityofnewyork.us/resource/25th-nujf.csv?$limit=10000", function (error, root) {
- 		if (error) throw error;
+
+		function loadGoogleSpreadsheet(spreadsheetKey, fn) {
+  			d3.csv("https://docs.google.com/spreadsheet/pub?key="1_NHmJUOXy8aHPIPX_4BDgJrTfo2IKUQQoMsf1k8Ydco"&single=true&output=csv", fn);
+		}
 
 	 		//Police Precinct
 			 var PPBrooklynList=[];
@@ -53,6 +55,24 @@
 			 var data=[]; //3D array of PPList, incidentCount, borough
 			 var dobj=[]; //array formated specifically for hierarchical processing
 
+// TALLY NUMBER OF ROWS WITH THE SAME DATE
+
+			 root.forEach(function (d) {
+			     var PPBrooklynList = dateFormat.parse(obj.timeStamp);
+			            var dateOnly = dateFormat(dateAndTime).split(' ')[0];
+			            tally[dateOnly] = (tally[dateOnly]||0) + 1;
+			        });
+
+			        for (var dateOnly in tally) {
+			            if (tally.hasOwnProperty(dateOnly)) {
+			                csvData.push({
+			                    uniqueDate: dateOnly,
+			                    frequency: tally[dateOnly]
+			                });
+			            }
+			        }
+
+//What Arlene did for baby names
 			 root.forEach(function (d) {
 				 if (+d["RNK"] <= 10) {
 				 
